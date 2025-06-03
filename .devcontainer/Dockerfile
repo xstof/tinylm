@@ -14,3 +14,8 @@ RUN if [ -f "/tmp/conda-tmp/environment.yml" ]; then umask 0002 && /opt/conda/bi
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 #     && apt-get -y install --no-install-recommends <your-package-list-here>
+
+# Install nbdev, see: https://nbdev.fast.ai/tutorials/tutorial.html
+RUN nbdev_install_quarto
+RUN pip install jupyterlab-quarto  # at time of writing this package is not yet available through conda
+

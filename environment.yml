@@ -16,4 +16,5 @@ dependencies:
   - anaconda-anon-usage
   # custom installs from here, everything above was added by the devcontainer:
   - jupyterlab
+  - nbdev
 prefix: /opt/conda
