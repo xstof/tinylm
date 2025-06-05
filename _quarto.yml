@@ -1,9 +1,25 @@
 project:
   title: "TinyLM - language model learnings"
+  type: website
   output-dir: _output
+  execute-dir: project
 
-toc: true
-number-sections: true
+format:
+  html:
+    toc: true
+    number-sections: true
 
-
+website:
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+    - section: "Getting Started"
+      contents:
+      - text: "Home"
+        href: index.qmd
+    - section: "Notebooks"
+      contents:
+      - text: "Tokenization"
+        href: notebooks/01-Tokenizing.ipynb
 

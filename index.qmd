@@ -1,0 +1,13 @@
+---
+title: "TinyLM - Language Model Learnings"
+---
+
+# Welcome to TinyLM
+
+This site contains my journey learning about language models, from tokenization to implementation.
+
+## Contents
+
+- [Tokenizing](notebooks/01-Tokenizing.ipynb) - Understanding how text becomes tokens
+
+Navigate using the sidebar to explore different topics.
