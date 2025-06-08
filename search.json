@@ -15,7 +15,7 @@
     "href": "theory/cross-entropy-loss.html",
     "title": "Cross-Entropy Loss",
     "section": "",
-    "text": "::: {#cell-1 .cell 0=‘h’ 1=‘i’ 2=‘d’ 3=‘e’ execution_count=4}\n:::\nThe Cross-Entropy Loss function is typically used as a loss function in multi-class classification problems.\nThe output for a neural network doing classification is a set of probabilities (a so-called probability distribution where every class is associated with a probability). We try to adapt weights to optimize the resulting probabilities to match as close as possible the ground truth. To iteratively adapt the weights and improve the prediction, a loss function is needed. For multi-class classification, Cross-Entropy Loss is used.",
+    "text": "The Cross-Entropy Loss function is typically used as a loss function in multi-class classification problems.\nThe output for a neural network doing classification is a set of probabilities (a so-called probability distribution where every class is associated with a probability). We try to adapt weights to optimize the resulting probabilities to match as close as possible the ground truth. To iteratively adapt the weights and improve the prediction, a loss function is needed. For multi-class classification, Cross-Entropy Loss is used.",
     "crumbs": [
       "Theory",
       "Cross Entropy Loss"
