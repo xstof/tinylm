@@ -9,7 +9,7 @@
 <meta name="author" content="Christof Claessens">
 <meta name="dcterms.date" content="2025-06-01">
 
-<title>Attention mechanics – TinyLM - language model learnings</title>
+<title>Softmax – TinyLM - language model learnings</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -111,7 +111,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../notebooks/01-Tokenizing.html">Notebooks</a></li><li class="breadcrumb-item"><a href="../notebooks/02-Attention.html">Attention</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../theory/softmax.html">Theory</a></li><li class="breadcrumb-item"><a href="../theory/softmax.html">Softmax Function</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -164,7 +164,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../theory/softmax.html" class="sidebar-item-text sidebar-link">
+  <a href="../theory/softmax.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Softmax Function</span></a>
   </div>
 </li>
@@ -193,7 +193,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/02-Attention.html" class="sidebar-item-text sidebar-link active">
+  <a href="../notebooks/02-Attention.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Attention</span></a>
   </div>
 </li>
@@ -209,19 +209,17 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#self-attention" id="toc-self-attention" class="nav-link active" data-scroll-target="#self-attention"><span class="header-section-number">1</span> Self-Attention</a>
-  <ul class="collapse">
-  <li><a href="#simplified-self-attention" id="toc-simplified-self-attention" class="nav-link" data-scroll-target="#simplified-self-attention"><span class="header-section-number">1.1</span> Simplified Self-Attention</a></li>
-  </ul></li>
+  <li><a href="#what-is-softmax" id="toc-what-is-softmax" class="nav-link active" data-scroll-target="#what-is-softmax"><span class="header-section-number">1</span> What is Softmax?</a></li>
+  <li><a href="#relation-to-cross-entropy-loss" id="toc-relation-to-cross-entropy-loss" class="nav-link" data-scroll-target="#relation-to-cross-entropy-loss"><span class="header-section-number">2</span> Relation to Cross-Entropy Loss</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../notebooks/01-Tokenizing.html">Notebooks</a></li><li class="breadcrumb-item"><a href="../notebooks/02-Attention.html">Attention</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../theory/softmax.html">Theory</a></li><li class="breadcrumb-item"><a href="../theory/softmax.html">Softmax Function</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Attention mechanics</h1>
+<h1 class="title">Softmax</h1>
 </div>
 
 
@@ -250,20 +248,42 @@ window.Quarto = {
 </header>
 
 
-<p>In the previous notebook we prepared and massaged our text into input vectors that encode both tokens as well as their positions. It’s these input vectors that will be handled by the rest of the model.</p>
-<section id="self-attention" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Self-Attention</h1>
-<p>Self-Attention is a technique whereby each position in the input sequence can consider the relevancy of each other position in the same sequence when the representation for the sequence is being computed. (Traditional “attention”, as opposed to self-attention look at relations between two different sequences, input- and output, as opposed as using a single sequence.)</p>
-<section id="simplified-self-attention" class="level2" data-number="1.1">
-<h2 data-number="1.1" class="anchored" data-anchor-id="simplified-self-attention"><span class="header-section-number">1.1</span> Simplified Self-Attention</h2>
-<p>Let’s take a simple sentence: “I am learning this”</p>
-<p>This is our input sequencen let’s call it <span class="math inline">\(x\)</span> with 4 tokens: <span class="math inline">\(x^{(1)}\)</span>, <span class="math inline">\(x^{(2)}\)</span>, <span class="math inline">\(x^{(3)}\)</span> and <span class="math inline">\(x^{(4)}\)</span>.</p>
-<p>In general if our context length is <span class="math inline">\(T\)</span> then we have <span class="math inline">\(x^{(1)} \ldots x^{(T)}\)</span></p>
-<p>Each <span class="math inline">\(x^{(i)}\)</span> is a <span class="math inline">\(d\)</span>-dimensional embedding vector representing a token.</p>
-<p>Now we will calculate a context vector <span class="math inline">\(z^{i}\)</span> for each <span class="math inline">\(x^{i}\)</span>. This vector will contain information from all vectors <span class="math inline">\(x^{(1)} \ldots x^{(T)}\)</span></p>
-
-
+<section id="what-is-softmax" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> What is Softmax?</h1>
+<p>Softmax is a transformation, when applied to range of logits (the outputs of a neural network layer), turns their real values into probabilities that:</p>
+<ul>
+<li>together sum up to one</li>
+<li>each sit between <span class="math inline">\(0\ldots 1\)</span></li>
+</ul>
+<p>Often, for classification tasks, it will be used as the final output layer of a neural network.</p>
+<p>Imagine outputs <span class="math inline">\(x_{1}\)</span>, <span class="math inline">\(x_{2}\)</span>, …</p>
+<p>The softmax for one of these numbers <span class="math inline">\(x_{i}\)</span> is: <span class="math display">\[s(x_{i}) = \frac{e^{x_{i}}}{ \sum_{j=1}^{n} e^{x_{j} }}\]</span></p>
+<p>Look at the function <span class="math inline">\(e^{x}\)</span> plotted out:</p>
+<div id="5bed4266" class="cell">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="softmax_files/figure-html/cell-3-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Oberve that this function maps x from <span class="math inline">\(-\infty\)</span> to <span class="math inline">\(+\infty\)</span> to a range between <span class="math inline">\(0\ldots1\)</span>. It also “encourages” large values proportionally more than small values.</p>
 </section>
+<section id="relation-to-cross-entropy-loss" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Relation to Cross-Entropy Loss</h1>
+<p>Recall the formula for Cross-Entropy Loss, as outlined in <a href="../theory/cross-entropy-loss.html">Cross-Entropy Loss</a>:</p>
+<p><span class="math display">\[\mathcal{L} = -\sum_{c=1}^{M} y_c \log(p_c)\]</span> where:</p>
+<ul>
+<li><span class="math inline">\(M\)</span> is the number of categories</li>
+<li><span class="math inline">\(y_c\)</span> is the ground truth (one-hot)</li>
+<li><span class="math inline">\(p_c\)</span> is the predicated probability for class c (after applying softmax)</li>
+</ul>
+<p><span class="math display">\[\mathcal{L} = -[ y_1 log(p_1) + y_2 log(p_2) + ... + y_M log(p_M) ] \]</span></p>
+<p>however, for only one single category the ground truth <span class="math inline">\(y_{\text{true}}\)</span> will be <span class="math inline">\(1\)</span> for all the others, the ground truth <span class="math inline">\(y_i\)</span> will be <span class="math inline">\(0\)</span>. This means we can further simplify this to:</p>
+<p><span class="math display">\[\mathcal{L} =  -[ y_{\text{true}} log(p_\text{true})] \]</span></p>
+
+
 </section>
 
 </main> <!-- /main -->
