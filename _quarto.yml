@@ -18,6 +18,10 @@ website:
       contents:
       - text: "Home"
         href: index.qmd
+    - section: "Theory"
+      contents:
+      - text: "Cross Entropy Loss"
+        href: theory/cross-entropy-loss.ipynb
     - section: "Notebooks"
       contents:
       - text: "Tokenization"

@@ -19,4 +19,5 @@ dependencies:
   - jupyterlab
   - nbdev
   - pytorch
+  - matplotlib
 prefix: /opt/conda
