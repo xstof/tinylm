@@ -20,6 +20,8 @@ website:
         href: index.qmd
     - section: "Theory"
       contents:
+      - text: "Softmax Function"
+        href: theory/softmax.ipynb
       - text: "Cross Entropy Loss"
         href: theory/cross-entropy-loss.ipynb
     - section: "Notebooks"
