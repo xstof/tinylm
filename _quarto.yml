@@ -22,4 +22,6 @@ website:
       contents:
       - text: "Tokenization"
         href: notebooks/01-Tokenizing.ipynb
+      - text: "Attention"
+        href: notebooks/02-Attention.ipynb
 
