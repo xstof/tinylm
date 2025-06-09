@@ -248,11 +248,12 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#simplified-self-attention" id="toc-simplified-self-attention" class="nav-link" data-scroll-target="#simplified-self-attention"><span class="header-section-number">1.1</span> Simplified Self-Attention</a>
   <ul class="collapse">
-  <li><a href="#attention-weights" id="toc-attention-weights" class="nav-link" data-scroll-target="#attention-weights"><span class="header-section-number">1.1.1</span> Attention weights</a></li>
+  <li><a href="#attention-scores" id="toc-attention-scores" class="nav-link" data-scroll-target="#attention-scores"><span class="header-section-number">1.1.1</span> Attention scores</a></li>
   <li><a href="#normalizing" id="toc-normalizing" class="nav-link" data-scroll-target="#normalizing"><span class="header-section-number">1.1.2</span> Normalizing</a></li>
   <li><a href="#context-vector" id="toc-context-vector" class="nav-link" data-scroll-target="#context-vector"><span class="header-section-number">1.1.3</span> Context Vector</a></li>
   <li><a href="#all-context-vectors" id="toc-all-context-vectors" class="nav-link" data-scroll-target="#all-context-vectors"><span class="header-section-number">1.1.4</span> All context vectors</a></li>
   </ul></li>
+  <li><a href="#self-attention-with-trainable-weights" id="toc-self-attention-with-trainable-weights" class="nav-link" data-scroll-target="#self-attention-with-trainable-weights"><span class="header-section-number">1.2</span> Self-Attention with trainable weights</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -302,8 +303,8 @@ window.Quarto = {
 <p>In general if our context length is <span class="math inline">\(T\)</span> then we have <span class="math inline">\(x^{(1)} \ldots x^{(T)}\)</span></p>
 <p>Each <span class="math inline">\(x^{(i)}\)</span> is a <span class="math inline">\(d\)</span>-dimensional embedding vector representing a token.</p>
 <p>Now we will calculate a context vector <span class="math inline">\(z^{i}\)</span> for each <span class="math inline">\(x^{i}\)</span>. This vector will contain information from all vectors <span class="math inline">\(x^{(1)} \ldots x^{(T)}\)</span></p>
-<section id="attention-weights" class="level3" data-number="1.1.1">
-<h3 data-number="1.1.1" class="anchored" data-anchor-id="attention-weights"><span class="header-section-number">1.1.1</span> Attention weights</h3>
+<section id="attention-scores" class="level3" data-number="1.1.1">
+<h3 data-number="1.1.1" class="anchored" data-anchor-id="attention-scores"><span class="header-section-number">1.1.1</span> Attention scores</h3>
 <p>So, for example, for <span class="math inline">\(x^{(3)}\)</span> we’ll calculate a context vector <span class="math inline">\(z^{(3)}\)</span>. We’ll call <span class="math inline">\(x^{(3)}\)</span> our “query” vector and for this query we’ll calculate an attention score for each of the tokens in our sentence: for example <span class="math inline">\(w_{31}\)</span> for the attention score between our query (the 3rd token) and the first token. In this way we’ll have: <span class="math inline">\(w_{31}\)</span>, <span class="math inline">\(w_{32}\)</span>, <span class="math inline">\(w_{33}\)</span> and <span class="math inline">\(w_{34}\)</span></p>
 <p>The attention score <span class="math inline">\(w_{31}\)</span> is the dot product from the third token with the first token. So if: <span class="math display">\[ x^{(3)} = [0.2,0.7,0.9] \text{  (representing the token "learning")} \]</span> <span class="math display">\[ x^{(1)} = [0.8,0.9,0.3] \text{  (representing the token "I")} \]</span></p>
 <p>Then:</p>
@@ -364,9 +365,105 @@ window.Quarto = {
 <section id="all-context-vectors" class="level3" data-number="1.1.4">
 <h3 data-number="1.1.4" class="anchored" data-anchor-id="all-context-vectors"><span class="header-section-number">1.1.4</span> All context vectors</h3>
 <p>What we did so far is to look at how to calculate a single context vector <span class="math inline">\(z^{(3)}\)</span>, for a single token <span class="math inline">\(x^{(3)}\)</span> in our input sequence. We’ll need to make this more scalable and figure out a way to calculate <span class="math inline">\(z\)</span> for all tokens in our input sequence.</p>
-
-
+<p>This means, what we have done for <span class="math inline">\(x^{(3)}\)</span> we need to do for all inputs:</p>
+<div id="028b9ac1" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>attention_scores_manual <span class="op">=</span> torch.empty((<span class="dv">4</span>, <span class="dv">4</span>))  <span class="co"># for each query of the 4 inputs, calculate 4 attention scores</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, query <span class="kw">in</span> <span class="bu">enumerate</span>(inputs):</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j, xi <span class="kw">in</span> <span class="bu">enumerate</span>(inputs):</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        attention_scores_manual[i][j] <span class="op">=</span> torch.dot(query, xi)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention scores:"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_scores_manual)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"for comparison, the attention scores for x3 as query:"</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_score_for_x3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>attention scores:
+tensor([[1.7622, 1.4337, 1.3127, 1.1999],
+        [1.4337, 1.4338, 1.1213, 0.8494],
+        [1.3127, 1.1213, 1.5807, 1.3343],
+        [1.1999, 0.8494, 1.3343, 1.2435]])
+for comparison, the attention scores for x3 as query:
+tensor([1.3127, 1.1213, 1.5807, 1.3343])</code></pre>
+</div>
+</div>
+<p>Using <code>for</code> loops however is slow and can’t be optimized using CUDA, so let’s find a way to do the same, but to use pure tensor calculations instead. Our inputs look like the below, with 4 tokens, each with a dimension of 3</p>
+<div id="b4de671a" class="cell" data-execution_count="17">
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[0.8823, 0.9150, 0.3829],
+        [0.9593, 0.3904, 0.6009],
+        [0.2566, 0.7936, 0.9408],
+        [0.1332, 0.9346, 0.5936]])</code></pre>
+</div>
+</div>
+<p>We can transpose this vector, so it looks like:</p>
+<div id="3ff2e719" class="cell" data-execution_count="12">
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[0.8823, 0.9593, 0.2566, 0.1332],
+        [0.9150, 0.3904, 0.7936, 0.9346],
+        [0.3829, 0.6009, 0.9408, 0.5936]])</code></pre>
+</div>
+</div>
+<p>If we now take multiply these two matrices, we get:</p>
+<div id="dbb777d1" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>attention_scores <span class="op">=</span> inputs <span class="op">@</span> inputs.T  <span class="co"># matrix multiplication</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(inputs <span class="op">@</span> inputs.T) <span class="co"># matrix multiplication</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"for comparison, the attention scores for x3 as query:"</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_score_for_x3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[1.7622, 1.4337, 1.3127, 1.1999],
+        [1.4337, 1.4338, 1.1213, 0.8494],
+        [1.3127, 1.1213, 1.5807, 1.3343],
+        [1.1999, 0.8494, 1.3343, 1.2435]])
+for comparison, the attention scores for x3 as query:
+tensor([1.3127, 1.1213, 1.5807, 1.3343])</code></pre>
+</div>
+</div>
+<p>These are just attention scores, not yet attention weights, so lets normalize them:</p>
+<div id="4ac7edec" class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>attention_weights <span class="op">=</span> torch.softmax(attention_scores, dim<span class="op">=-</span><span class="dv">1</span>)  <span class="co"># normalize the attention scores</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention weights:"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_weights)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"for comparison, the attention weights for x3 as query:"</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_weights_for_x3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>attention weights:
+tensor([[0.3415, 0.2459, 0.2179, 0.1946],
+        [0.3040, 0.3040, 0.2225, 0.1695],
+        [0.2407, 0.1987, 0.3146, 0.2459],
+        [0.2569, 0.1809, 0.2938, 0.2683]])
+for comparison, the attention weights for x3 as query:
+tensor([0.2407, 0.1987, 0.3146, 0.2459])</code></pre>
+</div>
+</div>
+<p>From here we can calculate our context vectors:</p>
+<div id="ba50a5fd" class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>all_context_vectors <span class="op">=</span> attention_weights <span class="op">@</span> inputs  <span class="co"># matrix multiplication</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"context vectors for all inputs:"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(all_context_vectors)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"for comparison, the context vector for x3:"</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(context_vector_for_x3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>context vectors for all inputs:
+tensor([[0.6191, 0.7634, 0.5991],
+        [0.6395, 0.7318, 0.6090],
+        [0.5165, 0.7774, 0.6536],
+        [0.5113, 0.7897, 0.6428]])
+for comparison, the context vector for x3:
+tensor([0.5165, 0.7774, 0.6536])</code></pre>
+</div>
+</div>
 </section>
+</section>
+<section id="self-attention-with-trainable-weights" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="self-attention-with-trainable-weights"><span class="header-section-number">1.2</span> Self-Attention with trainable weights</h2>
+<p>From here we’ll expand to what is called “scaled dot-product attention”. Also here we’ll want to calculate context vectors (one for each of our input tokens) as a weighted sum over (some abstraction) of the inputs. There are some differences with what we’ve done so far though:</p>
+<ul>
+<li>instead of taking directly <span class="math inline">\(q^{(i)} = x^{(i)}\)</span> as the query vector, we’ll use a projection of <span class="math inline">\(x^{(i)}\)</span>. We do this using a trainable weight matrix <span class="math inline">\(W_q\)</span>, used to calculate our query</li>
+<li>instead of taking directly the dot product of <span class="math inline">\(q^{(i)}\)</span> and each <span class="math inline">\(x^{(i)}\)</span> to calculate our attention scores and weights, we’ll do the dot product with a projection of <span class="math inline">\(x^{(i)}\)</span>. We do this using a trainable weight matrix <span class="math inline">\(W_k\)</span>, used to calculate our keys.</li>
+<li>instead of calculating the weighted average using these scores with each <span class="math inline">\(x^{(i)}\)</span>, we’ll do this with a projection of <span class="math inline">\(x^{(i)}\)</span>. We do this using a trainable weight matrix <span class="math inline">\(W_v\)</span>, used to calculate our values.</li>
+</ul>
+
+
 </section>
 </section>
 
