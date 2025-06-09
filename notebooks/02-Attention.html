@@ -253,7 +253,11 @@ window.Quarto = {
   <li><a href="#context-vector" id="toc-context-vector" class="nav-link" data-scroll-target="#context-vector"><span class="header-section-number">1.1.3</span> Context Vector</a></li>
   <li><a href="#all-context-vectors" id="toc-all-context-vectors" class="nav-link" data-scroll-target="#all-context-vectors"><span class="header-section-number">1.1.4</span> All context vectors</a></li>
   </ul></li>
-  <li><a href="#self-attention-with-trainable-weights" id="toc-self-attention-with-trainable-weights" class="nav-link" data-scroll-target="#self-attention-with-trainable-weights"><span class="header-section-number">1.2</span> Self-Attention with trainable weights</a></li>
+  <li><a href="#self-attention-with-trainable-weights" id="toc-self-attention-with-trainable-weights" class="nav-link" data-scroll-target="#self-attention-with-trainable-weights"><span class="header-section-number">1.2</span> Self-Attention with trainable weights</a>
+  <ul class="collapse">
+  <li><a href="#single-context-vector" id="toc-single-context-vector" class="nav-link" data-scroll-target="#single-context-vector"><span class="header-section-number">1.2.1</span> Single context vector</a></li>
+  <li><a href="#why-scaling" id="toc-why-scaling" class="nav-link" data-scroll-target="#why-scaling"><span class="header-section-number">1.2.2</span> Why scaling?</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -311,7 +315,7 @@ window.Quarto = {
 <p><span class="math display">\[w_{(31)} = x^{(3)} \cdot x^{(1)} = [(.2*.8) + (.7*.9) + (.9 * .3)] = 1.06 \]</span></p>
 <p>We’ll do this between our query <span class="math inline">\(x^{(3)}\)</span> and each of our <span class="math inline">\(x^{(1)},x^{(2)},x^{(3)},x^{(4)}\)</span> which result in an attention vector <span class="math inline">\(w_3 = [ w_{(31)},w_{(32)},w_{(33)},w_{(34)} ]\)</span></p>
 <p>Now in python, using an input vector of our 4 tokens, each with an embedding dimension of 3:</p>
-<div id="87225baa" class="cell" data-execution_count="2">
+<div id="87225baa" class="cell" data-execution_count="24">
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor([[0.8823, 0.9150, 0.3829],
         [0.9593, 0.3904, 0.6009],
@@ -462,8 +466,178 @@ tensor([0.5165, 0.7774, 0.6536])</code></pre>
 <li>instead of taking directly the dot product of <span class="math inline">\(q^{(i)}\)</span> and each <span class="math inline">\(x^{(i)}\)</span> to calculate our attention scores and weights, we’ll do the dot product with a projection of <span class="math inline">\(x^{(i)}\)</span>. We do this using a trainable weight matrix <span class="math inline">\(W_k\)</span>, used to calculate our keys.</li>
 <li>instead of calculating the weighted average using these scores with each <span class="math inline">\(x^{(i)}\)</span>, we’ll do this with a projection of <span class="math inline">\(x^{(i)}\)</span>. We do this using a trainable weight matrix <span class="math inline">\(W_v\)</span>, used to calculate our values.</li>
 </ul>
+<p>We’ll have trainable weight matrixes: <span class="math inline">\(W_q\)</span>, <span class="math inline">\(W_k\)</span>, <span class="math inline">\(W_v\)</span> so that the model, when trained can learn to use these to project respectively the query, key and value vectors.</p>
+<section id="single-context-vector" class="level3" data-number="1.2.1">
+<h3 data-number="1.2.1" class="anchored" data-anchor-id="single-context-vector"><span class="header-section-number">1.2.1</span> Single context vector</h3>
+<p>Our token embedding vectors are of a certain dimension <code>embedding_dim = 3</code> in our example. We can choose to project these into another dimension, from 3 to 5 for example. (This is not usually done however, it’s likely kept the same.) For illustration purposes, let’s go with 5 here:</p>
+<div id="2db615f5" class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>d_in <span class="op">=</span> embedding_dim</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>d_out <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>W_query_1 <span class="op">=</span> torch.rand((d_in, d_out))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>W_key_1 <span class="op">=</span> torch.rand((d_in, d_out))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>W_value_1 <span class="op">=</span> torch.rand((d_in, d_out))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can now use <span class="math inline">\(W_q\)</span>, <span class="math inline">\(W_k\)</span>, <span class="math inline">\(W_v\)</span> to project an embedding vector from it’s normal dimension into a dimension of 5. Let’s use <span class="math inline">\(x^{(3)}\)</span> as an example for our query:</p>
+<div id="6980ee82" class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>x3 <span class="op">=</span> inputs[<span class="dv">2</span>]</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"x3 input:"</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(x3)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"W_query:"</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(W_query_1)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> x3 <span class="op">@</span> W_query_1</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"projected query:"</span>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(query)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>x3 input:
+tensor([0.2566, 0.7936, 0.9408])
+W_query:
+tensor([[0.1591, 0.7653],
+        [0.2979, 0.8035],
+        [0.3813, 0.7860]])
+projected query:
+tensor([0.6360, 1.5735])</code></pre>
+</div>
+</div>
+<p>Instead of defining our projection matrices like above, we’ll define them as pytorch parameters:</p>
+<div id="5938b6c2" class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>W_query <span class="op">=</span> torch.nn.Parameter(W_query_1, requires_grad<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>W_key <span class="op">=</span> torch.nn.Parameter(W_key_1, requires_grad<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>W_value <span class="op">=</span> torch.nn.Parameter(W_value_1, requires_grad<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s calculate our key and value vectors for every input token in our sentence “I am learning this”: <span class="math inline">\(x^{(1)}\)</span>: “I”, <span class="math inline">\(x^{(2)}\)</span>: “am”, <span class="math inline">\(x^{(3)}\)</span>: “learning”, <span class="math inline">\(x^{(4)}\)</span>: “this”,</p>
+<div id="b833c4d4" class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> inputs <span class="op">@</span> W_value</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"values:"</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(values)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>keys <span class="op">=</span> inputs <span class="op">@</span> W_key</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"keys:"</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(keys)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>values:
+tensor([[1.0811, 1.1212],
+        [1.0958, 0.6997],
+        [0.7121, 1.0991],
+        [0.5263, 1.1051]])
+keys:
+tensor([[0.8380, 1.0783],
+        [0.5856, 0.9536],
+        [0.8969, 1.2950],
+        [0.8457, 1.0728]])</code></pre>
+</div>
+</div>
+<p>Now we can calculate the attention scores, for our query vector that got projected from <span class="math inline">\(x^{(3)}\)</span></p>
+<div id="55f57929" class="cell" data-execution_count="37">
+<div class="cell-output cell-output-stdout">
+<pre><code>query projection from x3:
+tensor([0.6360, 1.5735])</code></pre>
+</div>
+</div>
+<p>The attention score <span class="math inline">\(w_{31}\)</span> is:</p>
+<div id="51c04b8f" class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>x1 <span class="op">=</span> inputs[<span class="dv">0</span>]</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"x1 input:"</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(x1)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"key projection from x1: "</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> x1 <span class="op">@</span> W_key</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(key)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"... which is the same as: "</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(keys[<span class="dv">0</span>])  <span class="co"># keys[0] is the key for x1</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention score between our query and x1's projected key:"</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>attention_score_x3_x1 <span class="op">=</span> query.dot(key)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_score_x3_x1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>x1 input:
+tensor([0.8823, 0.9150, 0.3829])
+key projection from x1: 
+tensor([0.8380, 1.0783])
+... which is the same as: 
+tensor([0.8380, 1.0783])
+attention score between our query and x1's projected key:
+tensor(2.2296)</code></pre>
+</div>
+</div>
+<p>In the same way as we got the attention score between the query and x1, we can get all attention scores for our query like this:</p>
+<div id="c8599d0e" class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>attention_scores_x3_as_query <span class="op">=</span> query <span class="op">@</span> keys.T</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention scores for x3 as query:"</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_scores_x3_as_query)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>attention scores for x3 as query:
+tensor([2.2296, 1.8729, 2.6081, 2.2259])</code></pre>
+</div>
+</div>
+<p>As is shown above, for our chosen query, we’ll end up with 4 attention scores: one for each input token. Like before, we’ll want to normalize our attention scores into attention weights but instead of doing a pure softmax function, we’ll first scale the attention scores by dividing them by the square root of the dimension of our projected keys (2 in this case).</p>
+<div id="ee0dbd7a" class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"dimension of our projected key: "</span>, d_out)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>scaled_attention_weights_x3_as_query <span class="op">=</span> <span class="op">\</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  torch.softmax(attention_scores_x3_as_query <span class="op">/</span> d_out<span class="op">**</span><span class="fl">0.5</span>, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"scaled attention weights for x3 as query:"</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scaled_attention_weights_x3_as_query)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>dimension of our projected key:  2
+scaled attention weights for x3 as query:
+tensor([0.2450, 0.1904, 0.3202, 0.2444])</code></pre>
+</div>
+</div>
+</section>
+<section id="why-scaling" class="level3" data-number="1.2.2">
+<h3 data-number="1.2.2" class="anchored" data-anchor-id="why-scaling"><span class="header-section-number">1.2.2</span> Why scaling?</h3>
+<p>As the dimension for our projected key vector grows, the dot products can become large numbers. An example:</p>
+<div id="d45e5e84" class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>key_dim <span class="op">=</span> key.shape[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"dimension of the key: "</span>, key_dim)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>W_k_for_small_output_dim <span class="op">=</span> torch.rand(key_dim, <span class="dv">2</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>W_q_for_small_output_dim <span class="op">=</span> torch.rand(key_dim, <span class="dv">2</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>W_k_for_large_output_dim <span class="op">=</span> torch.rand(key_dim, <span class="dv">64</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>W_q_for_large_output_dim <span class="op">=</span> torch.rand(key_dim, <span class="dv">64</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>projected_small_key <span class="op">=</span> key <span class="op">@</span> W_k_for_small_output_dim</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>projected_small_query <span class="op">=</span> query <span class="op">@</span> W_q_for_small_output_dim</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>projected_large_key <span class="op">=</span> key <span class="op">@</span> W_k_for_large_output_dim</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>projected_large_query <span class="op">=</span> query <span class="op">@</span> W_q_for_large_output_dim</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"projected small key:"</span>)</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(projected_small_key)</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"projected large key:"</span>)</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(projected_large_key)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>dimension of the key:  2
+projected small key:
+tensor([0.6326, 0.9359])
+projected large key:
+tensor([0.4478, 0.7348, 1.1196, 0.9742, 1.0326, 1.0020, 1.6563, 1.0928, 0.0713,
+        0.5738, 0.3447, 1.4417, 0.2443, 0.7093, 1.2625, 0.2308, 1.5117, 0.7690,
+        1.2653, 0.3664, 1.1790, 1.0853, 0.9684, 1.0427, 0.7200, 0.4810, 1.0639,
+        0.3090, 0.5419, 0.4283, 1.2715, 0.6433, 0.4540, 1.1592, 0.7374, 0.9412,
+        1.5725, 0.7243, 1.2070, 1.0182, 0.3968, 0.6695, 0.9187, 0.7781, 1.1283,
+        1.7330, 0.5940, 0.8747, 1.1336, 0.5392, 0.5872, 0.2331, 1.0088, 1.4892,
+        0.6480, 0.5210, 0.7092, 1.0901, 1.2410, 1.0542, 1.3430, 1.6599, 1.3503,
+        0.9442])</code></pre>
+</div>
+</div>
+<div id="97448ac8" class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>attention_scores_for_small_key <span class="op">=</span> projected_small_query <span class="op">@</span> projected_small_key.T</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention scores for small key:"</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_scores_for_small_key)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>attention_scores_for_large_key <span class="op">=</span> projected_large_query <span class="op">@</span> projected_large_key.T</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention scores for large key:"</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_scores_for_large_key)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>attention scores for small key:
+tensor(0.8767)
+attention scores for large key:
+tensor(67.4447)</code></pre>
+</div>
+</div>
+<p>See how the attention score for a large projected key dimension is so much larger?</p>
 
 
+</section>
 </section>
 </section>
 
