@@ -212,11 +212,11 @@ window.Quarto = {
   <li><a href="#loss-for-classificiation" id="toc-loss-for-classificiation" class="nav-link active" data-scroll-target="#loss-for-classificiation"><span class="header-section-number">1</span> Loss for classificiation</a></li>
   <li><a href="#shannon-information" id="toc-shannon-information" class="nav-link" data-scroll-target="#shannon-information"><span class="header-section-number">2</span> Shannon Information</a>
   <ul class="collapse">
-  <li><a href="#a-fair-coin-flip" id="toc-a-fair-coin-flip" class="nav-link" data-scroll-target="#a-fair-coin-flip"><span class="header-section-number">2.0.1</span> A fair coin flip</a></li>
-  <li><a href="#winning-team-out-of-8" id="toc-winning-team-out-of-8" class="nav-link" data-scroll-target="#winning-team-out-of-8"><span class="header-section-number">2.0.2</span> Winning team out of 8</a></li>
-  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes"><span class="header-section-number">2.0.3</span> 10 outcomes</a></li>
-  <li><a href="#non-uniform-distributions" id="toc-non-uniform-distributions" class="nav-link" data-scroll-target="#non-uniform-distributions"><span class="header-section-number">2.1</span> Non-uniform distributions</a></li>
-  <li><a href="#shannon-entropy-formula" id="toc-shannon-entropy-formula" class="nav-link" data-scroll-target="#shannon-entropy-formula"><span class="header-section-number">2.2</span> Shannon Entropy Formula</a></li>
+  <li><a href="#a-fair-coin-flip" id="toc-a-fair-coin-flip" class="nav-link" data-scroll-target="#a-fair-coin-flip"><span class="header-section-number">2.1</span> A fair coin flip</a></li>
+  <li><a href="#winning-team-out-of-8" id="toc-winning-team-out-of-8" class="nav-link" data-scroll-target="#winning-team-out-of-8"><span class="header-section-number">2.2</span> Winning team out of 8</a></li>
+  <li><a href="#outcomes" id="toc-outcomes" class="nav-link" data-scroll-target="#outcomes"><span class="header-section-number">2.3</span> 10 outcomes</a></li>
+  <li><a href="#non-uniform-distributions" id="toc-non-uniform-distributions" class="nav-link" data-scroll-target="#non-uniform-distributions"><span class="header-section-number">2.4</span> Non-uniform distributions</a></li>
+  <li><a href="#shannon-entropy-formula" id="toc-shannon-entropy-formula" class="nav-link" data-scroll-target="#shannon-entropy-formula"><span class="header-section-number">2.5</span> Shannon Entropy Formula</a></li>
   </ul></li>
   <li><a href="#kl-divergence" id="toc-kl-divergence" class="nav-link" data-scroll-target="#kl-divergence"><span class="header-section-number">3</span> KL Divergence</a>
   <ul class="collapse">
@@ -230,8 +230,8 @@ window.Quarto = {
   <li><a href="#multi-label-classification" id="toc-multi-label-classification" class="nav-link" data-scroll-target="#multi-label-classification"><span class="header-section-number">7</span> Multi-label Classification</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">8</span> References</a>
   <ul class="collapse">
-  <li><a href="#articles" id="toc-articles" class="nav-link" data-scroll-target="#articles"><span class="header-section-number">8.0.1</span> Articles</a></li>
-  <li><a href="#videos" id="toc-videos" class="nav-link" data-scroll-target="#videos"><span class="header-section-number">8.0.2</span> Videos</a></li>
+  <li><a href="#articles" id="toc-articles" class="nav-link" data-scroll-target="#articles"><span class="header-section-number">8.1</span> Articles</a></li>
+  <li><a href="#videos" id="toc-videos" class="nav-link" data-scroll-target="#videos"><span class="header-section-number">8.2</span> Videos</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -279,20 +279,20 @@ window.Quarto = {
 <h1 data-number="2"><span class="header-section-number">2</span> Shannon Information</h1>
 <p>An occurrence of an unlikely event gives more information than the occurrence of a very likely event. Shannon came up with a way to quantify how unpredictable a series of events is; measuring the “disorder” of system and quantifying uncertainty of a probability distribution.</p>
 <p>Let’s do a thought experiment with two people: person A and person B. They can agree upfront on the meaning of a series of bits thrown back and forth over a wall (like some mapping function saying “0101” means event “abc” happened). Beyond the bits used for communicating they cannot exchange other information. Let’s now assume a number of different scenarios.</p>
-<section id="a-fair-coin-flip" class="level3" data-number="2.0.1">
-<h3 data-number="2.0.1" class="anchored" data-anchor-id="a-fair-coin-flip"><span class="header-section-number">2.0.1</span> A fair coin flip</h3>
+<section id="a-fair-coin-flip" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="a-fair-coin-flip"><span class="header-section-number">2.1</span> A fair coin flip</h2>
 <p>Assume person A does a fair coin flip where the probability distribution of having heads is the same as having tails, each being 50 percent: <span class="math inline">\(P(H)=0.5\)</span> and <span class="math inline">\(P(T)=0.5\)</span></p>
 <p>Both A and B can agree to exchange the outcome of the coin flip using a single bit of information where 0 means heads and 1 means tails. When B receives the bit, he will know exactly what the outcome of the coin flip was. We can say the entropy of this probability distribution is 1 bit.</p>
 </section>
-<section id="winning-team-out-of-8" class="level3" data-number="2.0.2">
-<h3 data-number="2.0.2" class="anchored" data-anchor-id="winning-team-out-of-8"><span class="header-section-number">2.0.2</span> Winning team out of 8</h3>
+<section id="winning-team-out-of-8" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="winning-team-out-of-8"><span class="header-section-number">2.2</span> Winning team out of 8</h2>
 <p>Assume on the one side of the wall person A observes one team out of 8 winning a tournament. Each team has a probability of 1/8 or 0.125 of winning, so this is again an equal probability distribution: <span class="math inline">\(P(A)=0.125\)</span>, <span class="math inline">\(P(B)=0.125\)</span>, <span class="math inline">\(P(C)=0.125\)</span>, …, <span class="math inline">\(P(H)=0.125\)</span></p>
 <p>A and B can agree to communicate the winning team using 3 bits of information. 3 bits give them <span class="math inline">\(2^3=8\)</span> classes, one for each team. Let’s say “000” means team A; “001” team B; “010” team C and so on. We can say the entropy for this probability distribution is 3 bits.</p>
 <p>If we generalize this: for a uniform distribution of M equally possible outcomes, the entropy is: <span class="math inline">\(log_2\,M\)</span></p>
 <p>This also holds for distributions where the number of outcomes is not exactly a power of 2, like was the case in the examples before. Let’s have a look at this in the next example.</p>
 </section>
-<section id="outcomes" class="level3" data-number="2.0.3">
-<h3 data-number="2.0.3" class="anchored" data-anchor-id="outcomes"><span class="header-section-number">2.0.3</span> 10 outcomes</h3>
+<section id="outcomes" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="outcomes"><span class="header-section-number">2.3</span> 10 outcomes</h2>
 <p>If A observes an outcome out of equal distributation of 10 possible outcomes (each with a probability of 0.1), then these can all be encoded using 4 bits. 4 bits allows for representing <span class="math inline">\(2^4=16\)</span> states which is more than needed for our 10 possible outcomes. There are 6 “unused” states.</p>
 <p>We can group outcomes in groups of 3. There are 1000 possible outcomes (3 observations, each 10 possible outcomes is <span class="math inline">\(10*10*10\)</span> ). If we encode our data per 3 observations, then every such triplet can be encoded using 10 bits, giving us a total of <span class="math inline">\(2^10=1024\)</span> states, just a bit more than we need to encoce our 1000 possibilities. That’s still too much but we’re already much more efficient in encoding out information as we can represent on average 1 outcome = 1/3 triplet using <span class="math inline">\(\frac{10}{3}=3.333...\)</span> bits. This is better but not perfect yet.</p>
 <p>We grouped our information by 3 outcomes at a time; which gave us <span class="math inline">\(10^3\)</span> outcomes. Let’s call the number of items by which we group is G instead of 3. The number of states we can present with B bits is <span class="math inline">\(2^B\)</span>. The most efficient encoding is one where <span class="math inline">\(2^B = 10^G\)</span> where G is the number of grouped observations and B is the number of bits.</p>
@@ -302,13 +302,13 @@ window.Quarto = {
 <p><span class="math inline">\(\frac{B}{G}\)</span> is our entropy and <span class="math inline">\(log_2 10\)</span> is approximately 3.322…</p>
 <p>So for a uniform distribution of M possible outcomes (<span class="math inline">\(U(M)\)</span>) in which every probability of an outcome is <span class="math inline">\(p_{1..M} = \frac{1}{M}\)</span>, the entropy is: <span class="math display">\[H(U(M))=log_2\,M\]</span></p>
 </section>
-<section id="non-uniform-distributions" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="non-uniform-distributions"><span class="header-section-number">2.1</span> Non-uniform distributions</h2>
+<section id="non-uniform-distributions" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="non-uniform-distributions"><span class="header-section-number">2.4</span> Non-uniform distributions</h2>
 <p>As we’ve seen before, each outcome with probability <span class="math inline">\(p\)</span> needs <span class="math inline">\(log_2\,M\)</span> bits to encode or <span class="math inline">\(log_2\,\frac{1}{p}\)</span> which is <span class="math inline">\(-log_2\,p\)</span>. Summing this over an entire distribution and multiplying each possible outcome with its probability gives us the entropy for a non-uniform distribution: <span class="math inline">\(-\sum_{i=1}^{M}\,p_{i}\,log_2\,p_{i}\)</span></p>
 <p>This describes how much information, on average, is needed to describe the outcome for a distribution.</p>
 </section>
-<section id="shannon-entropy-formula" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="shannon-entropy-formula"><span class="header-section-number">2.2</span> Shannon Entropy Formula</h2>
+<section id="shannon-entropy-formula" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="shannon-entropy-formula"><span class="header-section-number">2.5</span> Shannon Entropy Formula</h2>
 <p>Shannon Entropy is defined as: <span class="math display">\[H=-\sum_{i=1}^{M}P(x_{i}) \, log_2 \, P(x_{i})\]</span></p>
 </section>
 </section>
@@ -407,8 +407,8 @@ Note
 </section>
 <section id="references" class="level1" data-number="8">
 <h1 data-number="8"><span class="header-section-number">8</span> References</h1>
-<section id="articles" class="level3" data-number="8.0.1">
-<h3 data-number="8.0.1" class="anchored" data-anchor-id="articles"><span class="header-section-number">8.0.1</span> Articles</h3>
+<section id="articles" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="articles"><span class="header-section-number">8.1</span> Articles</h2>
 <ul>
 <li><a href="https://machinelearningmastery.com/cross-entropy-for-machine-learning/">MachineLearningMastery - Cross Entropy for Machine Learning</a></li>
 <li><a href="https://towardsdatascience.com/cross-entropy-for-dummies-5189303c7735">TowardsDataScience - Cross Entropy for Dummies</a></li>
@@ -416,8 +416,8 @@ Note
 <li><a href="https://www.countbayesie.com/blog/2017/5/9/kullback-leibler-divergence-explained">KL divergence explained</a></li>
 </ul>
 </section>
-<section id="videos" class="level3" data-number="8.0.2">
-<h3 data-number="8.0.2" class="anchored" data-anchor-id="videos"><span class="header-section-number">8.0.2</span> Videos</h3>
+<section id="videos" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="videos"><span class="header-section-number">8.2</span> Videos</h2>
 <ul>
 <li><a href="https://www.youtube.com/watch?v=0GCGaw0QOhA">Intuitively understanding Shannon Entropy</a></li>
 <li><a href="https://www.youtube.com/watch?v=SxGYPqCgJWM">Intuitively Understanding the KL Divergence</a></li>
