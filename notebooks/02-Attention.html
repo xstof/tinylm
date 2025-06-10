@@ -255,8 +255,9 @@ window.Quarto = {
   </ul></li>
   <li><a href="#self-attention-with-trainable-weights" id="toc-self-attention-with-trainable-weights" class="nav-link" data-scroll-target="#self-attention-with-trainable-weights"><span class="header-section-number">1.2</span> Self-Attention with trainable weights</a>
   <ul class="collapse">
-  <li><a href="#single-context-vector" id="toc-single-context-vector" class="nav-link" data-scroll-target="#single-context-vector"><span class="header-section-number">1.2.1</span> Single context vector</a></li>
+  <li><a href="#single-context-vector-1" id="toc-single-context-vector-1" class="nav-link" data-scroll-target="#single-context-vector-1"><span class="header-section-number">1.2.1</span> Single context vector (1)</a></li>
   <li><a href="#why-scaling" id="toc-why-scaling" class="nav-link" data-scroll-target="#why-scaling"><span class="header-section-number">1.2.2</span> Why scaling?</a></li>
+  <li><a href="#single-context-vector-2" id="toc-single-context-vector-2" class="nav-link" data-scroll-target="#single-context-vector-2"><span class="header-section-number">1.2.3</span> Single context vector (2)</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -467,8 +468,8 @@ tensor([0.5165, 0.7774, 0.6536])</code></pre>
 <li>instead of calculating the weighted average using these scores with each <span class="math inline">\(x^{(i)}\)</span>, we’ll do this with a projection of <span class="math inline">\(x^{(i)}\)</span>. We do this using a trainable weight matrix <span class="math inline">\(W_v\)</span>, used to calculate our values.</li>
 </ul>
 <p>We’ll have trainable weight matrixes: <span class="math inline">\(W_q\)</span>, <span class="math inline">\(W_k\)</span>, <span class="math inline">\(W_v\)</span> so that the model, when trained can learn to use these to project respectively the query, key and value vectors.</p>
-<section id="single-context-vector" class="level3" data-number="1.2.1">
-<h3 data-number="1.2.1" class="anchored" data-anchor-id="single-context-vector"><span class="header-section-number">1.2.1</span> Single context vector</h3>
+<section id="single-context-vector-1" class="level3" data-number="1.2.1">
+<h3 data-number="1.2.1" class="anchored" data-anchor-id="single-context-vector-1"><span class="header-section-number">1.2.1</span> Single context vector (1)</h3>
 <p>Our token embedding vectors are of a certain dimension <code>embedding_dim = 3</code> in our example. We can choose to project these into another dimension, from 3 to 5 for example. (This is not usually done however, it’s likely kept the same.) For illustration purposes, let’s go with 5 here:</p>
 <div id="2db615f5" class="cell" data-execution_count="66">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>d_in <span class="op">=</span> embedding_dim</span>
@@ -583,6 +584,7 @@ scaled attention weights for x3 as query:
 tensor([0.2773, 0.2594, 0.2700, 0.1933])</code></pre>
 </div>
 </div>
+<p>We don’t have our full context vector yet. For that we’ll still need to make a weighted combination of our projected value vectors. Before we do so, let’s digress a little on the need for scaling the softmax.</p>
 </section>
 <section id="why-scaling" class="level3" data-number="1.2.2">
 <h3 data-number="1.2.2" class="anchored" data-anchor-id="why-scaling"><span class="header-section-number">1.2.2</span> Why scaling?</h3>
@@ -723,6 +725,44 @@ tensor([1.3290e-15, 3.8671e-24, 9.9977e-01, 2.2833e-04])</code></pre>
 tensor([0.2115, 0.1435, 0.3343, 0.3108])
 scaled attention weights for large keys:
 tensor([0.0101, 0.0009, 0.7323, 0.2567])</code></pre>
+</div>
+</div>
+</section>
+<section id="single-context-vector-2" class="level3" data-number="1.2.3">
+<h3 data-number="1.2.3" class="anchored" data-anchor-id="single-context-vector-2"><span class="header-section-number">1.2.3</span> Single context vector (2)</h3>
+<p>Now that we have our scaled attention weights, we can calculate the context vector for our query. We’ll do this by making a weighted combination of the projected values. Our scaled attention weights were:</p>
+<div id="62d316f6" class="cell" data-execution_count="94">
+<div class="cell-output cell-output-stdout">
+<pre><code>scaled attention weights, one for each token:
+tensor([0.2773, 0.2594, 0.2700, 0.1933])</code></pre>
+</div>
+</div>
+<p>These we’ll multiply with our projected values. Our values were:</p>
+<div id="960a94f8" class="cell" data-execution_count="95">
+<div class="cell-output cell-output-stdout">
+<pre><code>projected values:
+tensor([[0.6307, 0.4225],
+        [0.5699, 0.3401],
+        [0.8266, 0.2332],
+        [0.6742, 0.2259]])</code></pre>
+</div>
+</div>
+<p>The calculated attention vector for query from <span class="math inline">\(x^{(3)}\)</span>:</p>
+<div id="fac6f840" class="cell" data-execution_count="100">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>context_vector_x3 <span class="op">=</span> scaled_attention_weights_x3_as_query <span class="op">@</span> values</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"context vector for x3:"</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(context_vector_x3)</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"double check: the first number is the same as:"</span>)</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="fl">0.2773</span><span class="op">*</span><span class="fl">0.6307</span><span class="op">+</span><span class="fl">0.2594</span><span class="op">*</span><span class="fl">0.5699</span><span class="op">+</span><span class="fl">0.27</span><span class="op">*</span><span class="fl">0.8266</span><span class="op">+</span><span class="fl">0.1933</span><span class="op">*</span><span class="fl">0.6742</span>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"the second number is the same as:"</span>)</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="fl">0.2773</span><span class="op">*</span><span class="fl">0.4225</span><span class="op">+</span><span class="fl">0.2594</span><span class="op">*</span><span class="fl">0.3401</span><span class="op">+</span><span class="fl">0.27</span><span class="op">*</span><span class="fl">0.2332</span><span class="op">+</span><span class="fl">0.1933</span><span class="op">*</span><span class="fl">0.2259</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>context vector for x3:
+tensor([0.6762, 0.3120])
+double check: the first number is the same as:
+0.67623003
+the second number is the same as:
+0.31201166</code></pre>
 </div>
 </div>
 
