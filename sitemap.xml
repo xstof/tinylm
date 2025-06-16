@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://xstof.github.io/tinylm/theory/softmax.html</loc>
-    <lastmod>2025-06-11T09:26:06.696Z</lastmod>
+    <lastmod>2025-06-16T16:42:56.902Z</lastmod>
   </url>
   <url>
     <loc>https://xstof.github.io/tinylm/index.html</loc>
-    <lastmod>2025-06-11T09:26:06.694Z</lastmod>
+    <lastmod>2025-06-16T16:42:56.901Z</lastmod>
   </url>
   <url>
     <loc>https://xstof.github.io/tinylm/notebooks/01-Tokenizing.html</loc>
-    <lastmod>2025-06-11T09:26:06.695Z</lastmod>
+    <lastmod>2025-06-16T16:42:56.901Z</lastmod>
   </url>
   <url>
     <loc>https://xstof.github.io/tinylm/notebooks/02-Attention.html</loc>
-    <lastmod>2025-06-11T09:26:06.695Z</lastmod>
+    <lastmod>2025-06-16T16:42:56.902Z</lastmod>
   </url>
   <url>
     <loc>https://xstof.github.io/tinylm/theory/cross-entropy-loss.html</loc>
-    <lastmod>2025-06-11T09:26:06.695Z</lastmod>
+    <lastmod>2025-06-16T16:42:56.902Z</lastmod>
   </url>
 </urlset>
