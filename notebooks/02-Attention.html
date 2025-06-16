@@ -264,7 +264,10 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#naive-self-attention" id="toc-naive-self-attention" class="nav-link" data-scroll-target="#naive-self-attention"><span class="header-section-number">1.3.1</span> Naive self-attention</a></li>
   <li><a href="#optimized-self-attention" id="toc-optimized-self-attention" class="nav-link" data-scroll-target="#optimized-self-attention"><span class="header-section-number">1.3.2</span> Optimized self-attention</a></li>
+  <li><a href="#dropouts" id="toc-dropouts" class="nav-link" data-scroll-target="#dropouts"><span class="header-section-number">1.3.3</span> Dropouts</a></li>
+  <li><a href="#self-attention-class" id="toc-self-attention-class" class="nav-link" data-scroll-target="#self-attention-class"><span class="header-section-number">1.3.4</span> Self-Attention Class</a></li>
   </ul></li>
+  <li><a href="#multi-head-attention" id="toc-multi-head-attention" class="nav-link" data-scroll-target="#multi-head-attention"><span class="header-section-number">1.4</span> Multi-Head Attention</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -1057,9 +1060,78 @@ tensor([[0.5545, 0.3680],
         [0.4590, 0.3586]], grad_fn=&lt;MmBackward0&gt;)</code></pre>
 </div>
 </div>
-
-
 </section>
+<section id="dropouts" class="level3" data-number="1.3.3">
+<h3 data-number="1.3.3" class="anchored" data-anchor-id="dropouts"><span class="header-section-number">1.3.3</span> Dropouts</h3>
+<p>Dropout is a technique where at random some units are being ignored during training (and only during training). It prevents overfitting. In transformers we’ll either do this: - (most common) after calculating the attention weights, or - after the attention weights are applied to the value vectors</p>
+<p>Let’s see how this works for a simple tensor filled with ones and note how the resulting values are scaled up to compensate for the dropped out values and to retain balance.</p>
+<div id="1603d3c4" class="cell" data-execution_count="96">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>dropout <span class="op">=</span> nn.Dropout(p<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>test <span class="op">=</span> torch.ones(<span class="dv">5</span>,<span class="dv">5</span>)</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"test tensor before dropout:"</span>)</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(test)</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"test tensor after dropout:"</span>)</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dropout(test))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>test tensor before dropout:
+tensor([[1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1.],
+        [1., 1., 1., 1., 1.]])
+test tensor after dropout:
+tensor([[2., 2., 2., 2., 0.],
+        [2., 0., 0., 2., 2.],
+        [2., 2., 0., 0., 2.],
+        [0., 2., 0., 0., 2.],
+        [2., 0., 2., 2., 2.]])</code></pre>
+</div>
+</div>
+</section>
+<section id="self-attention-class" class="level3" data-number="1.3.4">
+<h3 data-number="1.3.4" class="anchored" data-anchor-id="self-attention-class"><span class="header-section-number">1.3.4</span> Self-Attention Class</h3>
+<div id="3ffc267f" class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CausalAttention(nn.Module):</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in, d_out, context_length, dropout, qkc_bias<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.d_out <span class="op">=</span> d_out</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.W_query <span class="op">=</span> nn.Linear(d_in, d_out, bias<span class="op">=</span>qkc_bias)   <span class="co"># (d_in, d_out); d_in is the embedding vector size</span></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.W_key <span class="op">=</span> nn.Linear(d_in, d_out, bias<span class="op">=</span>qkc_bias)     <span class="co"># (d_in, d_out)</span></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.W_value <span class="op">=</span> nn.Linear(d_in, d_out, bias<span class="op">=</span>qkc_bias)   <span class="co"># (d_in, d_out)  </span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.dropout <span class="op">=</span> nn.Dropout(dropout)</span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.register_buffer(<span class="st">"mask"</span>, </span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a>                             torch.triu(torch.ones(context_length, context_length), diagonal<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""</span></span>
+<span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a><span class="co">            x: input vector (batch_size, num_tokens, d_in)</span></span>
+<span id="cb65-15"><a href="#cb65-15" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
+<span id="cb65-16"><a href="#cb65-16" aria-hidden="true" tabindex="-1"></a>        batch_size, num_tokens, d_in <span class="op">=</span> x.shape</span>
+<span id="cb65-17"><a href="#cb65-17" aria-hidden="true" tabindex="-1"></a>        keys <span class="op">=</span> <span class="va">self</span>.W_key(x)                         <span class="co"># (batch_size, num_tokens, d_in) x (d_in, d_out) = (batch_size, num_tokens, d_out)</span></span>
+<span id="cb65-18"><a href="#cb65-18" aria-hidden="true" tabindex="-1"></a>        queries <span class="op">=</span> <span class="va">self</span>.W_query(x)                    <span class="co"># (batch_size, num_tokens, d_in) x (d_in, d_out) = (batch_size, num_tokens, d_out)</span></span>
+<span id="cb65-19"><a href="#cb65-19" aria-hidden="true" tabindex="-1"></a>        values <span class="op">=</span> <span class="va">self</span>.W_value(x)                     <span class="co"># (batch_size, num_tokens, d_in) x (d_in, d_out) = (batch_size, num_tokens, d_out)   </span></span>
+<span id="cb65-20"><a href="#cb65-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-21"><a href="#cb65-21" aria-hidden="true" tabindex="-1"></a>        att_scores <span class="op">=</span> queries <span class="op">@</span> keys.transpose(<span class="dv">1</span>,<span class="dv">2</span>)   <span class="co"># (batch_size, num_tokens, d_out) @ (batch_size, d_out, num_tokens) </span></span>
+<span id="cb65-22"><a href="#cb65-22" aria-hidden="true" tabindex="-1"></a>                                                     <span class="co"># = (batch_size, num_tokens, num_tokens)</span></span>
+<span id="cb65-23"><a href="#cb65-23" aria-hidden="true" tabindex="-1"></a>        att_scores.masked_fill_(<span class="va">self</span>.mask.<span class="bu">bool</span>(), <span class="op">-</span>torch.inf)</span>
+<span id="cb65-24"><a href="#cb65-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-25"><a href="#cb65-25" aria-hidden="true" tabindex="-1"></a>        att_weights <span class="op">=</span> torch.softmax(</span>
+<span id="cb65-26"><a href="#cb65-26" aria-hidden="true" tabindex="-1"></a>                        att_scores <span class="op">/</span> <span class="va">self</span>.d_out<span class="op">**</span><span class="fl">0.5</span>, dim<span class="op">=-</span><span class="dv">1</span></span>
+<span id="cb65-27"><a href="#cb65-27" aria-hidden="true" tabindex="-1"></a>                      )</span>
+<span id="cb65-28"><a href="#cb65-28" aria-hidden="true" tabindex="-1"></a>        att_weights <span class="op">=</span> <span class="va">self</span>.dropout(att_weights)      <span class="co"># (batch_size, num_tokens, num_tokens)</span></span>
+<span id="cb65-29"><a href="#cb65-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-30"><a href="#cb65-30" aria-hidden="true" tabindex="-1"></a>        context_vec <span class="op">=</span> att_weights <span class="op">@</span> values           <span class="co"># (batch_size, num_tokens, num_tokens) @ (batch_size, num_tokens, d_out)</span></span>
+<span id="cb65-31"><a href="#cb65-31" aria-hidden="true" tabindex="-1"></a>                                                     <span class="co"># = (batch_size, num_tokens, d_out)</span></span>
+<span id="cb65-32"><a href="#cb65-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> context_vec</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="multi-head-attention" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="multi-head-attention"><span class="header-section-number">1.4</span> Multi-Head Attention</h2>
+<p>We will now move on from using a single attention head to multiple heads. Each of those has their own KQV tensors: <span class="math inline">\(W_{q1}\)</span>, <span class="math inline">\(W_{q2}\)</span>, <span class="math inline">\(W_{k1}\)</span>, <span class="math inline">\(W_{k2}\)</span>, <span class="math inline">\(W_{v1}\)</span>, <span class="math inline">\(W_{v2}\)</span></p>
+
+
 </section>
 </section>
 
