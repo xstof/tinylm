@@ -325,7 +325,7 @@ window.Quarto = {
 <p><span class="math display">\[w_{(31)} = x^{(3)} \cdot x^{(1)} = [(.2*.8) + (.7*.9) + (.9 * .3)] = 1.06 \]</span></p>
 <p>We’ll do this between our query <span class="math inline">\(x^{(3)}\)</span> and each of our <span class="math inline">\(x^{(1)},x^{(2)},x^{(3)},x^{(4)}\)</span> which result in an attention vector <span class="math inline">\(w_3 = [ w_{(31)},w_{(32)},w_{(33)},w_{(34)} ]\)</span></p>
 <p>Now in python, using an input vector of our 4 tokens, each with an embedding dimension of 3:</p>
-<div id="87225baa" class="cell" data-execution_count="59">
+<div id="87225baa" class="cell" data-execution_count="47">
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor([[0.8823, 0.9150, 0.3829],
         [0.9593, 0.3904, 0.6009],
@@ -334,7 +334,7 @@ window.Quarto = {
 </div>
 </div>
 <p>We’ll calculate the attention vector for <span class="math inline">\(x^{(3)}\)</span> as our query:</p>
-<div id="df259370" class="cell" data-execution_count="60">
+<div id="df259370" class="cell" data-execution_count="48">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> inputs[<span class="dv">2</span>]</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>attention_score_for_x3 <span class="op">=</span> torch.empty((<span class="dv">4</span>))</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, xi <span class="kw">in</span> <span class="bu">enumerate</span>(inputs):</span>
@@ -350,7 +350,7 @@ window.Quarto = {
 <section id="normalizing" class="level3" data-number="1.1.2">
 <h3 data-number="1.1.2" class="anchored" data-anchor-id="normalizing"><span class="header-section-number">1.1.2</span> Normalizing</h3>
 <p>Now that we’ve calculated the attention vector <span class="math inline">\(w_3\)</span> for query <span class="math inline">\(x^{(3)}\)</span>, we have a vector with a number for every token. These numbers however are not normalized between <span class="math inline">\(0\)</span> and <span class="math inline">\(1\)</span>, which is what we’d really like. For this, we’ll use <a href="../theory/cross-entropy-loss.html">Cross-Entropy Loss</a>, which will make sure the numbers in our attention vector add up to one and each are between <span class="math inline">\(0 \ldots 1\)</span></p>
-<div id="26d7f4f9" class="cell" data-execution_count="61">
+<div id="26d7f4f9" class="cell" data-execution_count="49">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>attention_weights_for_x3 <span class="op">=</span> torch.softmax(attention_score_for_x3, dim<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_weights_for_x3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -363,7 +363,7 @@ window.Quarto = {
 <p>So now that we have our normalized attention weights for a single query <span class="math inline">\(x^{(3)}\)</span> we can calculate the full context vector that corresponds to <span class="math inline">\(x^{(3)}\)</span></p>
 <p>Our attention weights from the previous step were: <span class="math inline">\([.2, .1, .3, .2]\)</span> or more in general, a vector <span class="math inline">\([\alpha _{31}, \alpha _{32}, \alpha _{33}, \alpha _{34}]\)</span></p>
 <p>To calculate the context vector for <span class="math inline">\(x^{(3)}\)</span> we’ll take each <span class="math inline">\(\alpha _{3i}\)</span> and multiply that by <span class="math inline">\(x^{(i)}\)</span>. Then we’ll add up all those vectors.</p>
-<div id="68002bda" class="cell" data-execution_count="62">
+<div id="68002bda" class="cell" data-execution_count="50">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> inputs[<span class="dv">2</span>]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>context_vector_for_x3 <span class="op">=</span> torch.zeros((query.shape)) <span class="co"># dimension of query (3 in this case)</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -380,7 +380,7 @@ window.Quarto = {
 <h3 data-number="1.1.4" class="anchored" data-anchor-id="all-context-vectors"><span class="header-section-number">1.1.4</span> All context vectors</h3>
 <p>What we did so far is to look at how to calculate a single context vector <span class="math inline">\(z^{(3)}\)</span>, for a single token <span class="math inline">\(x^{(3)}\)</span> in our input sequence. We’ll need to make this more scalable and figure out a way to calculate <span class="math inline">\(z\)</span> for all tokens in our input sequence.</p>
 <p>This means, what we have done for <span class="math inline">\(x^{(3)}\)</span> we need to do for all inputs:</p>
-<div id="028b9ac1" class="cell" data-execution_count="63">
+<div id="028b9ac1" class="cell" data-execution_count="51">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>attention_scores_manual <span class="op">=</span> torch.empty((<span class="dv">4</span>, <span class="dv">4</span>))  <span class="co"># for each query of the 4 inputs, calculate 4 attention scores</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, query <span class="kw">in</span> <span class="bu">enumerate</span>(inputs):</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j, xi <span class="kw">in</span> <span class="bu">enumerate</span>(inputs):</span>
@@ -401,7 +401,7 @@ tensor([1.3127, 1.1213, 1.5807, 1.3343])</code></pre>
 </div>
 </div>
 <p>Using <code>for</code> loops however is slow and can’t be optimized using CUDA, so let’s find a way to do the same, but to use pure tensor calculations instead. Our inputs look like the below, with 4 tokens, each with a dimension of 3</p>
-<div id="b4de671a" class="cell" data-execution_count="64">
+<div id="b4de671a" class="cell" data-execution_count="52">
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor([[0.8823, 0.9150, 0.3829],
         [0.9593, 0.3904, 0.6009],
@@ -410,7 +410,7 @@ tensor([1.3127, 1.1213, 1.5807, 1.3343])</code></pre>
 </div>
 </div>
 <p>We can transpose this vector, so it looks like:</p>
-<div id="3ff2e719" class="cell" data-execution_count="65">
+<div id="3ff2e719" class="cell" data-execution_count="53">
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor([[0.8823, 0.9593, 0.2566, 0.1332],
         [0.9150, 0.3904, 0.7936, 0.9346],
@@ -418,7 +418,7 @@ tensor([1.3127, 1.1213, 1.5807, 1.3343])</code></pre>
 </div>
 </div>
 <p>If we now take multiply these two matrices, we get:</p>
-<div id="dbb777d1" class="cell" data-execution_count="66">
+<div id="dbb777d1" class="cell" data-execution_count="54">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>attention_scores <span class="op">=</span> inputs <span class="op">@</span> inputs.T  <span class="co"># matrix multiplication</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(inputs <span class="op">@</span> inputs.T) <span class="co"># matrix multiplication</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"for comparison, the attention scores for x3 as query:"</span>)</span>
@@ -433,7 +433,7 @@ tensor([1.3127, 1.1213, 1.5807, 1.3343])</code></pre>
 </div>
 </div>
 <p>These are just attention scores, not yet attention weights, so lets normalize them:</p>
-<div id="4ac7edec" class="cell" data-execution_count="67">
+<div id="4ac7edec" class="cell" data-execution_count="55">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>attention_weights <span class="op">=</span> torch.softmax(attention_scores, dim<span class="op">=-</span><span class="dv">1</span>)  <span class="co"># normalize the attention scores</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention weights:"</span>)</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_weights)</span>
@@ -450,7 +450,7 @@ tensor([0.2407, 0.1987, 0.3146, 0.2459])</code></pre>
 </div>
 </div>
 <p>From here we can calculate our context vectors:</p>
-<div id="ba50a5fd" class="cell" data-execution_count="68">
+<div id="ba50a5fd" class="cell" data-execution_count="56">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>all_context_vectors <span class="op">=</span> attention_weights <span class="op">@</span> inputs  <span class="co"># matrix multiplication</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"context vectors for all inputs:"</span>)</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(all_context_vectors)</span>
@@ -480,7 +480,7 @@ tensor([0.5165, 0.7774, 0.6536])</code></pre>
 <section id="single-context-vector-1" class="level3" data-number="1.2.1">
 <h3 data-number="1.2.1" class="anchored" data-anchor-id="single-context-vector-1"><span class="header-section-number">1.2.1</span> Single context vector (1)</h3>
 <p>Our token embedding vectors are of a certain dimension <code>embedding_dim = 3</code> in our example. We can choose to project these into another dimension, from 3 to 5 for example. (This is not usually done however, it’s likely kept the same.) For illustration purposes, let’s go with 5 here:</p>
-<div id="2db615f5" class="cell" data-execution_count="69">
+<div id="2db615f5" class="cell" data-execution_count="57">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>d_in <span class="op">=</span> embedding_dim</span>
@@ -491,7 +491,7 @@ tensor([0.5165, 0.7774, 0.6536])</code></pre>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>W_value_1 <span class="op">=</span> torch.rand((d_in, d_out))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can now use <span class="math inline">\(W_q\)</span>, <span class="math inline">\(W_k\)</span>, <span class="math inline">\(W_v\)</span> to project an embedding vector from it’s normal dimension into a dimension of 5. Let’s use <span class="math inline">\(x^{(3)}\)</span> as an example for our query:</p>
-<div id="6980ee82" class="cell" data-execution_count="70">
+<div id="6980ee82" class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>x3 <span class="op">=</span> inputs[<span class="dv">2</span>]</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"x3 input:"</span>)</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(x3)</span>
@@ -514,13 +514,13 @@ tensor([0.8975, 1.5614])</code></pre>
 </div>
 </div>
 <p>Instead of defining our projection matrices like above, we’ll define them as pytorch parameters:</p>
-<div id="5938b6c2" class="cell" data-execution_count="71">
+<div id="5938b6c2" class="cell" data-execution_count="59">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>W_query <span class="op">=</span> torch.nn.Parameter(W_query_1, requires_grad<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>W_key <span class="op">=</span> torch.nn.Parameter(W_key_1, requires_grad<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>W_value <span class="op">=</span> torch.nn.Parameter(W_value_1, requires_grad<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s calculate our key and value vectors for every input token in our sentence “I am learning this”: <span class="math inline">\(x^{(1)}\)</span>: “I”, <span class="math inline">\(x^{(2)}\)</span>: “am”, <span class="math inline">\(x^{(3)}\)</span>: “learning”, <span class="math inline">\(x^{(4)}\)</span>: “this”,</p>
-<div id="b833c4d4" class="cell" data-execution_count="72">
+<div id="b833c4d4" class="cell" data-execution_count="60">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> inputs <span class="op">@</span> W_value</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"values:"</span>)</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(values)</span>
@@ -541,14 +541,14 @@ tensor([[1.4450, 1.0493],
 </div>
 </div>
 <p>Now we can calculate the attention scores, for our query vector that got projected from <span class="math inline">\(x^{(3)}\)</span></p>
-<div id="55f57929" class="cell" data-execution_count="73">
+<div id="55f57929" class="cell" data-execution_count="61">
 <div class="cell-output cell-output-stdout">
 <pre><code>query projection from x3:
 tensor([0.8975, 1.5614])</code></pre>
 </div>
 </div>
 <p>The attention score <span class="math inline">\(w_{31}\)</span> is:</p>
-<div id="51c04b8f" class="cell" data-execution_count="74">
+<div id="51c04b8f" class="cell" data-execution_count="62">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>x1 <span class="op">=</span> inputs[<span class="dv">0</span>]</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"x1 input:"</span>)</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(x1)</span>
@@ -573,7 +573,7 @@ tensor(2.9354)</code></pre>
 </div>
 </div>
 <p>In the same way as we got the attention score between the query and x1, we can get all attention scores for our query like this:</p>
-<div id="c8599d0e" class="cell" data-execution_count="75">
+<div id="c8599d0e" class="cell" data-execution_count="63">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>attention_scores_x3_as_query <span class="op">=</span> query <span class="op">@</span> keys.T</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention scores for x3 as query:"</span>)</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_scores_x3_as_query)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -583,7 +583,7 @@ tensor([2.9354, 2.8816, 2.8733, 2.2273])</code></pre>
 </div>
 </div>
 <p>As is shown above, for our chosen query, we’ll end up with 4 attention scores: one for each input token. Like before, we’ll want to normalize our attention scores into attention weights but instead of doing a pure softmax function, we’ll first scale the attention scores by dividing them by the square root of the dimension of our projected keys (2 in this case).</p>
-<div id="ee0dbd7a" class="cell" data-execution_count="76">
+<div id="ee0dbd7a" class="cell" data-execution_count="64">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"dimension of our projected key: "</span>, d_out)</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>scaled_attention_weights_x3_as_query <span class="op">=</span> <span class="op">\</span></span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  torch.softmax(attention_scores_x3_as_query <span class="op">/</span> d_out<span class="op">**</span><span class="fl">0.5</span>, dim<span class="op">=-</span><span class="dv">1</span>)</span>
@@ -600,7 +600,7 @@ tensor([0.2836, 0.2730, 0.2714, 0.1719])</code></pre>
 <section id="why-scaling" class="level3" data-number="1.2.2">
 <h3 data-number="1.2.2" class="anchored" data-anchor-id="why-scaling"><span class="header-section-number">1.2.2</span> Why scaling?</h3>
 <p>As the dimension for our projected key vector grows, the dot products can become large numbers. An example:</p>
-<div id="d45e5e84" class="cell" data-execution_count="77">
+<div id="d45e5e84" class="cell" data-execution_count="65">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>key_dim <span class="op">=</span> <span class="dv">3</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"dimension of the key: "</span>, key_dim)</span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>small_proj_key_dim <span class="op">=</span> <span class="dv">2</span></span>
@@ -692,7 +692,7 @@ tensor([[0.3035, 0.5216, 0.4596, 0.2893, 0.8955, 0.6188, 0.6455, 0.2561, 0.3482,
          0.1595]])</code></pre>
 </div>
 </div>
-<div id="97448ac8" class="cell" data-execution_count="78">
+<div id="97448ac8" class="cell" data-execution_count="66">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>attention_scores_for_small_keys <span class="op">=</span> projected_small_query <span class="op">@</span> projected_small_keys.T</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention scores for small keys:"</span>)</span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_scores_for_small_keys)</span>
@@ -707,7 +707,7 @@ tensor([11.8494, 16.6880,  7.7068,  7.4401])</code></pre>
 </div>
 </div>
 <p>See how the attention score for a large projected key dimension is so much larger? Let’s see what happens if we just apply softmax to both the small and the large key:</p>
-<div id="7dc39a2c" class="cell" data-execution_count="79">
+<div id="7dc39a2c" class="cell" data-execution_count="67">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>attention_weights_for_small_keys <span class="op">=</span> torch.softmax(attention_scores_for_small_keys, dim<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"attention weights for small keys:"</span>)</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(attention_weights_for_small_keys)</span>
@@ -722,7 +722,7 @@ tensor([7.8542e-03, 9.9193e-01, 1.2473e-04, 9.5529e-05])</code></pre>
 </div>
 </div>
 <p>If we now scale these values before applying softmax, we’ll get a different output that brings the result for a large projected key vector much closer in range compared to the small projected key:</p>
-<div id="73343062" class="cell" data-execution_count="80">
+<div id="73343062" class="cell" data-execution_count="68">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>scaled_att_weights_for_small_keys <span class="op">=</span> <span class="op">\</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  torch.softmax(attention_scores_for_small_keys <span class="op">/</span> small_proj_key_dim<span class="op">**</span><span class="fl">0.5</span>, dim<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"scaled attention weights for small keys:"</span>)</span>
@@ -742,14 +742,14 @@ tensor([0.2498, 0.4574, 0.1488, 0.1440])</code></pre>
 <section id="single-context-vector-2" class="level3" data-number="1.2.3">
 <h3 data-number="1.2.3" class="anchored" data-anchor-id="single-context-vector-2"><span class="header-section-number">1.2.3</span> Single context vector (2)</h3>
 <p>Now that we have our scaled attention weights, we can calculate the context vector for our query. We’ll do this by making a weighted combination of the projected values. Our scaled attention weights were:</p>
-<div id="62d316f6" class="cell" data-execution_count="81">
+<div id="62d316f6" class="cell" data-execution_count="69">
 <div class="cell-output cell-output-stdout">
 <pre><code>scaled attention weights, one for each token:
 tensor([0.2836, 0.2730, 0.2714, 0.1719])</code></pre>
 </div>
 </div>
 <p>These we’ll multiply with our projected values. Our values were:</p>
-<div id="960a94f8" class="cell" data-execution_count="82">
+<div id="960a94f8" class="cell" data-execution_count="70">
 <div class="cell-output cell-output-stdout">
 <pre><code>projected values:
 tensor([[1.7842, 1.1135],
@@ -759,7 +759,7 @@ tensor([[1.7842, 1.1135],
 </div>
 </div>
 <p>The calculated attention vector <span class="math inline">\(z^{(3)}\)</span> for query from <span class="math inline">\(x^{(3)}\)</span>:</p>
-<div id="fac6f840" class="cell" data-execution_count="83">
+<div id="fac6f840" class="cell" data-execution_count="71">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>context_vector_x3 <span class="op">=</span> scaled_attention_weights_x3_as_query <span class="op">@</span> values</span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"z3, the context vector for x3:"</span>)</span>
 <span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(context_vector_x3)</span>
@@ -780,7 +780,7 @@ the second number is the same as:
 <section id="all-context-vectors-1" class="level3" data-number="1.2.4">
 <h3 data-number="1.2.4" class="anchored" data-anchor-id="all-context-vectors-1"><span class="header-section-number">1.2.4</span> All context vectors</h3>
 <p>Given everything we know now from above, we’ll create a torch module for self attention now:</p>
-<div id="22b4bdfb" class="cell" data-execution_count="84">
+<div id="22b4bdfb" class="cell" data-execution_count="72">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -805,7 +805,7 @@ the second number is the same as:
 <span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> context_vectors</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The way we can use this module using our same inputs as before:</p>
-<div id="44c63556" class="cell" data-execution_count="85">
+<div id="44c63556" class="cell" data-execution_count="73">
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"inputs: "</span>)</span>
@@ -834,7 +834,7 @@ for comparison, the context vector for x3:
 tensor([1.6336, 1.0236])</code></pre>
 </div>
 </div>
-<div id="69a15fc5" class="cell" data-execution_count="86">
+<div id="69a15fc5" class="cell" data-execution_count="74">
 <div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
 <span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> utils <span class="im">import</span> plot_attention_heatmap</span>
 <span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -863,7 +863,7 @@ tensor([1.6336, 1.0236])</code></pre>
 <span id="cb46-26"><a href="#cb46-26" aria-hidden="true" tabindex="-1"></a>        context_vectors <span class="op">=</span> scaled_attention_weights <span class="op">@</span> values</span>
 <span id="cb46-27"><a href="#cb46-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> context_vectors</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="1224fd81" class="cell" data-execution_count="87">
+<div id="1224fd81" class="cell" data-execution_count="75">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"inputs: "</span>)</span>
@@ -906,7 +906,7 @@ tensor([[0.4536, 0.3638],
 <section id="naive-self-attention" class="level3" data-number="1.3.1">
 <h3 data-number="1.3.1" class="anchored" data-anchor-id="naive-self-attention"><span class="header-section-number">1.3.1</span> Naive self-attention</h3>
 <p>First we’ll set up the masking in a more naive way, not optimizing this yet just. Let’s first go back to calculating our queries, keys and attention scores. As a reminder: our inputs and <span class="math inline">\(W_q\)</span>, <span class="math inline">\(W_{key}\)</span> vectors:</p>
-<div id="4e58ba0c" class="cell" data-execution_count="88">
+<div id="4e58ba0c" class="cell" data-execution_count="76">
 <div class="cell-output cell-output-stdout">
 <pre><code>inputs: tensor([[0.8823, 0.9150, 0.3829],
         [0.9593, 0.3904, 0.6009],
@@ -927,7 +927,7 @@ W_key dimension: torch.Size([2, 3])
 </div>
 </div>
 <p>Let’s calculate our attention scores:</p>
-<div id="d92d1fc9" class="cell" data-execution_count="89">
+<div id="d92d1fc9" class="cell" data-execution_count="77">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>queries <span class="op">=</span> self_att.W_query(inputs)</span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>keys <span class="op">=</span> self_att.W_key(inputs)</span>
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -969,7 +969,7 @@ attention weights dimension: torch.Size([4, 4])
 </div>
 </div>
 <p>We’ll now mask out the values beyond the current input token which should not be seen during training. We can do this by zeroing out everything above the diagonal of this matrix.</p>
-<div id="d3bca65a" class="cell" data-execution_count="90">
+<div id="d3bca65a" class="cell" data-execution_count="78">
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>context_length <span class="op">=</span> att_weights.shape[<span class="op">-</span><span class="dv">1</span>]</span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"context length: </span><span class="sc">{</span>context_length<span class="sc">}</span><span class="ss"> </span><span class="ch">\n</span><span class="ss">"</span>)</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -993,7 +993,7 @@ masked attention weights: tensor([[0.2195, 0.0000, 0.0000, 0.0000],
 </div>
 </div>
 <p>Note how these values for each row don’t add up to one anymore.</p>
-<div id="43f660fd" class="cell" data-execution_count="91">
+<div id="43f660fd" class="cell" data-execution_count="79">
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>rows_sum <span class="op">=</span> masked_att_weights.<span class="bu">sum</span>(dim<span class="op">=-</span><span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"rows sum: </span><span class="sc">{</span>rows_sum<span class="sc">}</span><span class="ss"> </span><span class="ch">\n</span><span class="ss">"</span>)</span>
 <span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>masked_att_weights_normalized <span class="op">=</span> masked_att_weights <span class="op">/</span> rows_sum</span>
@@ -1015,7 +1015,7 @@ masked attention weights normalized: tensor([[1.0000, 0.0000, 0.0000, 0.0000],
 <section id="optimized-self-attention" class="level3" data-number="1.3.2">
 <h3 data-number="1.3.2" class="anchored" data-anchor-id="optimized-self-attention"><span class="header-section-number">1.3.2</span> Optimized self-attention</h3>
 <p>As a mathematical property for the softmax function, it treats <span class="math inline">\(-\infty\)</span> values as being 0 probabilities. As such we can turn our masking into:</p>
-<div id="0e6c5d33" class="cell" data-execution_count="92">
+<div id="0e6c5d33" class="cell" data-execution_count="80">
 <div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> torch.triu(torch.ones(context_length, context_length), diagonal<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"mask: </span><span class="ch">\n</span><span class="ss"> </span><span class="sc">{</span>mask<span class="sc">}</span><span class="ss"> </span><span class="ch">\n</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1027,7 +1027,7 @@ masked attention weights normalized: tensor([[1.0000, 0.0000, 0.0000, 0.0000],
 </code></pre>
 </div>
 </div>
-<div id="fa473342" class="cell" data-execution_count="94">
+<div id="fa473342" class="cell" data-execution_count="81">
 <div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>masked_scores <span class="op">=</span> att_scores.masked_fill(mask.<span class="bu">bool</span>(), <span class="op">-</span> torch.inf)</span>
 <span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"masked attention scores: </span><span class="ch">\n</span><span class="ss"> </span><span class="sc">{</span>masked_scores<span class="sc">}</span><span class="ss"> </span><span class="ch">\n</span><span class="ss">"</span>)</span>
 <span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>masked_att_weights_normalized <span class="op">=</span> torch.softmax(masked_scores <span class="op">/</span> (keys.shape[<span class="op">-</span><span class="dv">1</span>]<span class="op">**-</span><span class="fl">0.5</span>), dim<span class="op">=</span><span class="dv">1</span>)</span>
@@ -1048,12 +1048,12 @@ masked attention weights normalized:
 </div>
 </div>
 <p>From here we can compute the context vectors as before.</p>
-<div id="8f38d813" class="cell">
+<div id="8f38d813" class="cell" data-execution_count="82">
 <div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>context_vectors_3 <span class="op">=</span> masked_att_weights_normalized <span class="op">@</span> self_att.W_value(inputs)</span>
 <span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"context vectors  from self attention v3:"</span>)</span>
 <span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(context_vectors_3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>context vectors v3:
+<pre><code>context vectors  from self attention v3:
 tensor([[0.5545, 0.3680],
         [0.5772, 0.2723],
         [0.5198, 0.3241],
@@ -1065,7 +1065,7 @@ tensor([[0.5545, 0.3680],
 <h3 data-number="1.3.3" class="anchored" data-anchor-id="dropouts"><span class="header-section-number">1.3.3</span> Dropouts</h3>
 <p>Dropout is a technique where at random some units are being ignored during training (and only during training). It prevents overfitting. In transformers we’ll either do this: - (most common) after calculating the attention weights, or - after the attention weights are applied to the value vectors</p>
 <p>Let’s see how this works for a simple tensor filled with ones and note how the resulting values are scaled up to compensate for the dropped out values and to retain balance.</p>
-<div id="1603d3c4" class="cell" data-execution_count="96">
+<div id="1603d3c4" class="cell" data-execution_count="83">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>dropout <span class="op">=</span> nn.Dropout(p<span class="op">=</span><span class="fl">0.5</span>)</span>
 <span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>test <span class="op">=</span> torch.ones(<span class="dv">5</span>,<span class="dv">5</span>)</span>
@@ -1091,7 +1091,7 @@ tensor([[2., 2., 2., 2., 0.],
 </section>
 <section id="self-attention-class" class="level3" data-number="1.3.4">
 <h3 data-number="1.3.4" class="anchored" data-anchor-id="self-attention-class"><span class="header-section-number">1.3.4</span> Self-Attention Class</h3>
-<div id="3ffc267f" class="cell">
+<div id="3ffc267f" class="cell" data-execution_count="84">
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CausalAttention(nn.Module):</span>
 <span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in, d_out, context_length, dropout, qkc_bias<span class="op">=</span><span class="va">False</span>):</span>
 <span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -1129,7 +1129,74 @@ tensor([[2., 2., 2., 2., 0.],
 </section>
 <section id="multi-head-attention" class="level2" data-number="1.4">
 <h2 data-number="1.4" class="anchored" data-anchor-id="multi-head-attention"><span class="header-section-number">1.4</span> Multi-Head Attention</h2>
-<p>We will now move on from using a single attention head to multiple heads. Each of those has their own KQV tensors: <span class="math inline">\(W_{q1}\)</span>, <span class="math inline">\(W_{q2}\)</span>, <span class="math inline">\(W_{k1}\)</span>, <span class="math inline">\(W_{k2}\)</span>, <span class="math inline">\(W_{v1}\)</span>, <span class="math inline">\(W_{v2}\)</span></p>
+<p>We will now move on from using a single attention head to multiple heads. Each of those has their own KQV tensors: <span class="math inline">\(W_{q1}\)</span>, <span class="math inline">\(W_{q2}\)</span>, <span class="math inline">\(W_{k1}\)</span>, <span class="math inline">\(W_{k2}\)</span>, <span class="math inline">\(W_{v1}\)</span>, <span class="math inline">\(W_{v2}\)</span>, processing the same input sequence in parallel. This will result in multiple sets of context vectors, which will be combined.</p>
+<p>The naive version of this just stacks different <code>CausalAttention</code> modules:</p>
+<div id="b6b63954" class="cell" data-execution_count="85">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MultiHeadAttentionWrapper(nn.Module):</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in, d_out, context_length, dropout, num_heads, kqv_bias<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.heads <span class="op">=</span> nn.ModuleList([</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>            CausalAttention(d_in, d_out, context_length, dropout, kqv_bias) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(num_heads)</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>        ])</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""</span></span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a><span class="co">            x: input vector (batch_size, num_tokens, d_in)</span></span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.cat([head(x) <span class="cf">for</span> head <span class="kw">in</span> <span class="va">self</span>.heads], dim<span class="op">=-</span><span class="dv">1</span>)  <span class="co"># concatenate the context vectors from all heads</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s try and use this:</p>
+<div id="5b6bf582" class="cell" data-execution_count="89">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"inputs: "</span>)</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(inputs)</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a><span class="co"># inputs is just one entry in a batch, so to create a batch, concatenate 2 of those, add a batch dimension:</span></span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>batch <span class="op">=</span> torch.stack([inputs, inputs], dim<span class="op">=</span><span class="dv">0</span>)  <span class="co"># shape: (2, 4, 3)</span></span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"batch shape: "</span>, batch.shape)</span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"batch: "</span>)</span>
+<span id="cb67-11"><a href="#cb67-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(batch)</span>
+<span id="cb67-12"><a href="#cb67-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-13"><a href="#cb67-13" aria-hidden="true" tabindex="-1"></a>context_length <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb67-14"><a href="#cb67-14" aria-hidden="true" tabindex="-1"></a>d_in, d_out <span class="op">=</span> <span class="dv">3</span>, <span class="dv">2</span></span>
+<span id="cb67-15"><a href="#cb67-15" aria-hidden="true" tabindex="-1"></a>mh <span class="op">=</span> MultiHeadAttentionWrapper(d_in, d_out, context_length, dropout<span class="op">=</span><span class="fl">0.5</span>, num_heads<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb67-16"><a href="#cb67-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-17"><a href="#cb67-17" aria-hidden="true" tabindex="-1"></a>context_vectors_mh <span class="op">=</span> mh(batch)</span>
+<span id="cb67-18"><a href="#cb67-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"context vectors from MultiHeadAttentionWrapper:"</span>)</span>
+<span id="cb67-19"><a href="#cb67-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(context_vectors_mh)</span>
+<span id="cb67-20"><a href="#cb67-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"context vectors shape: "</span>, context_vectors_mh.shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>inputs: 
+tensor([[0.8823, 0.9150, 0.3829],
+        [0.9593, 0.3904, 0.6009],
+        [0.2566, 0.7936, 0.9408],
+        [0.1332, 0.9346, 0.5936]])
+batch shape:  torch.Size([2, 4, 3])
+batch: 
+tensor([[[0.8823, 0.9150, 0.3829],
+         [0.9593, 0.3904, 0.6009],
+         [0.2566, 0.7936, 0.9408],
+         [0.1332, 0.9346, 0.5936]],
+
+        [[0.8823, 0.9150, 0.3829],
+         [0.9593, 0.3904, 0.6009],
+         [0.2566, 0.7936, 0.9408],
+         [0.1332, 0.9346, 0.5936]]])
+context vectors from MultiHeadAttentionWrapper:
+tensor([[[0.0000, 0.0000, 0.0000, 0.0000],
+         [1.1579, 0.5298, 0.1844, 0.0505],
+         [0.6934, 0.3955, 0.4895, 0.2930],
+         [0.9313, 0.7045, 0.1114, 0.1550]],
+
+        [[0.0000, 0.0000, 0.0000, 0.0000],
+         [1.1579, 0.5298, 0.0000, 0.0000],
+         [0.7309, 0.3279, 0.3823, 0.1548],
+         [0.5421, 0.2420, 0.3807, 0.1421]]], grad_fn=&lt;CatBackward0&gt;)
+context vectors shape:  torch.Size([2, 4, 4])</code></pre>
+</div>
+</div>
 
 
 </section>
